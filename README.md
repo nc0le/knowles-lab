@@ -1,4 +1,5 @@
 ## Summer 2025 Research @ Knowles Lab
+
 ### Phase 1: RNA-seq pipeline for detecting exitrons (exonic introns) 
 pipeline_v1 overview: 
 
@@ -10,4 +11,4 @@ pipeline_v1 overview:
 5. Filter exitron data for exitrons present in >= 10 sources, with >= 30 reads each.
 6.  
 
-### Phase 2: ML to classify exitronic impact on genetic disease 
+### Phase 2: ML to predict falsitrons (fake exitrons) 
