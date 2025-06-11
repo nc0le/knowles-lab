@@ -9,6 +9,8 @@ pipeline_v1 overview:
 3. Function to find exitrons within data.
 4. Compile all exitron data from all files.
 5. Filter exitron data for exitrons present in >= 10 sources, with >= 30 reads each.
-6.  
+6. Normalize exitron data by finding exitron expression proportionate to expression of its surrounding regions.
+7. Identify previously annotated vs un-annotated exitrons.
 
-### ML to predict falsitrons (fake exitrons) 
+### Model
+model overview: 
