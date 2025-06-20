@@ -1,7 +1,7 @@
 ## Summer 2025 Research @ Knowles Lab
 
 ### RNA-seq pipeline for detecting exitrons (exonic introns) 
-pipeline_v1 overview: 
+pipeline_v1: 
 
 0. Install dependencies.
 1. Parse raw junction data from regtools files.
@@ -12,5 +12,3 @@ pipeline_v1 overview:
 6. Normalize exitron data by finding exitron expression proportionate to expression of its surrounding regions.
 7. Identify previously annotated vs un-annotated exitrons.
 
-### Model
-model overview: 
