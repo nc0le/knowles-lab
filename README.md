@@ -1,6 +1,6 @@
 ## Summer 2025 Research @ Knowles Lab
 
-### RNA-seq pipeline for detecting exitrons (exonic introns) in cDNA sequences
+### RNA-seq pipeline for detecting exitrons
 
 0. Install dependencies.
 1. Parse raw junction data from regtools files.
