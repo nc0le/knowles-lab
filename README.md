@@ -5,6 +5,13 @@
 
 ## Extended pipeline for detecting exitrons and falsitrons
 
+### Usage
+Force strandedness in junction data 
+
+Run script
+```
+python ext_exitron_pipe.py
+```
 ### Overview of ext_exitron_pipe.py:
 1. Parse raw junction data from regtools files.
 2. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
