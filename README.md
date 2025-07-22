@@ -6,16 +6,28 @@
 ## Extended pipeline for detecting exitrons and falsitrons
 
 ### Usage
-Force strandedness in junction data 
-
-Run script
+Clone ext_exitron_pipe.py and falsitron_finder.py
 ```
 python ext_exitron_pipe.py
 ```
-### Overview of ext_exitron_pipe.py:
-1. Parse raw junction data from regtools files.
-2. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
-   
+```
+python falsitron_finder.py
+```
+### Pipeline overview:
+1. Force stradedness in regtools data to accomodate nanopore data ('?' -> '-').
+2. Parse raw junction data from regtools files.
+3. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
+4. Extract following features from gencode v48: CDS, exon, five_prime_UTR, three_prime_UTR.
+5. Find exitrons *contained* within these regions.
+6. Find exitrons spanning adjacent exons.
+
+FINDING FALSITRONS:
+
+7. Use pipeline above to find exitrons for cDNA and dRNA data.
+8. Generate matrix of exitrons vs cDNA junction counts (reads) and dRNA junction counts.
+9. Filter for exitrons with cDNA counts > min_cDNA_reads (default = 5) and zero dRNA counts.
+10. Filter out canonical splice sites.
+
 ## 🌱 Pipeline for detecting exitrons and calculating expression levels (for ALS analysis)
 <img width="733" height="320" alt="Screenshot 2025-07-22 at 10 23 01 AM" src="https://github.com/user-attachments/assets/a61ae84e-570c-4deb-a2c3-03fab4140af6" />
 
@@ -42,7 +54,7 @@ exitron_pipe.py generates three files:
 * Parquet file of unique exitrons filtered for significance (default: present in at least 10 sources, with at least 30 reads each)
 * .npy file of all unique exitrons and their normalized expression levels
   
-### Overview of exitron_pipe.py:
+### Pipeline overview:
 1. Parse raw junction data from regtools files.
 2. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
 3. Extract annotated CDS regions from gencode v48.
