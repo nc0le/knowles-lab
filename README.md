@@ -2,7 +2,6 @@
 
 ### RNA-seq pipeline for detecting exitrons
 
-0. Install dependencies.
 1. Parse raw junction data from regtools files.
 2. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
 3. Function to find exitrons within data.
@@ -11,3 +10,4 @@
 6. Normalize exitron data by finding exitron expression proportionate to expression of its surrounding regions.
 7. Identify previously annotated vs un-annotated exitrons.
 
+### Extended pipeline for detecting exitrons and classifying falsitrons
