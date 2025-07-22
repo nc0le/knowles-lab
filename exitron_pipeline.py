@@ -228,6 +228,13 @@ def normalizeExitronData(filtered_exitron_data, output_filepath):
     np.save(output_filepath, normalized_df)
     return normalized_df
 
+# change first argument to directory containing junction data 
+# change second argument to parquet file for exitron data output 
+# change third argument to correct junction file identifier
 compileExitronData("/gpfs/commons/groups/knowles_lab/atokolyi/als/juncs_min6bp/", "/gpfs/commons/home/ncui/project/exitron_data.parquet", file_pattern="*.bam.junc")
+
+# change argument to name of filtered exitron data parquet file 
 filtered_exitron_data = filterExitronData('final_exitron_data.parquet')
+
+# change argument to name of normalized exitron expression data parquet file 
 normalizeExitronData(filtered_exitron_data, 'normalized_data.npy')
