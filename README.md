@@ -63,12 +63,11 @@ exitron_pipe.py generates three files:
 7. Normalize exitron data by finding exitron expression proportionate to expression of its surrounding regions.
 
 ## 🌱 ALS analysis
-### Modeling Exitron Usage in ALS vs Healthy Individuals
-
+### Modeling Exitron Usage in ALS vs Healthy Individuals 
+ALSvsHealthy_model.ipynb
 #### Key observations:
 * Strong tissue specificity for frontal cortex
 * Negative coefficients indicate these exitrons are **less used** in individuals with ALS
-
 #### Top results:
 ```
   Coef.  Std.Err.         z         P>|z|     [0.025    0.975]          tissue                     exitron     p_fdr
@@ -78,3 +77,7 @@ exitron_pipe.py generates three files:
 -4.972107  1.012073 -4.912797  8.978622e-07  -6.955733 -2.988481  Cortex_Frontal  chr1:240207870:240208101:+  0.000267
 -4.962993  1.087790 -4.562456  5.055875e-06  -7.095022 -2.830964  Cortex_Frontal  chr1:240207639:240208134:+  0.000893
 ```
+### Modeling Effect of Exitrons on ALS Severity 
+ALS_severity_model.ipynb
+
+
