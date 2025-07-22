@@ -1,6 +1,6 @@
 # Summer 2025 Research @ Knowles Lab
 
-## Falsitron prediction with machine learning (currently)
+## 🌱 Falsitron prediction with machine learning (currently)
 <img width="677" height="186" alt="Screenshot 2025-07-22 at 11 00 39 AM" src="https://github.com/user-attachments/assets/9538b16f-2efa-4e21-8964-a01f86076c23" />
 
 ## Extended pipeline for detecting exitrons and falsitrons
@@ -16,7 +16,7 @@ python ext_exitron_pipe.py
 1. Parse raw junction data from regtools files.
 2. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
    
-## Pipeline for detecting exitrons and calculating expression levels (for ALS analysis)
+## 🌱 Pipeline for detecting exitrons and calculating expression levels (for ALS analysis)
 <img width="733" height="320" alt="Screenshot 2025-07-22 at 10 23 01 AM" src="https://github.com/user-attachments/assets/a61ae84e-570c-4deb-a2c3-03fab4140af6" />
 
 ### Usage
@@ -50,4 +50,4 @@ exitron_pipe.py generates three files:
 6. Filter exitron data for exitrons present in >= 10 sources, with >= 30 reads each.
 7. Normalize exitron data by finding exitron expression proportionate to expression of its surrounding regions.
 
-## ALS analysis
+## 🌱 ALS analysis
