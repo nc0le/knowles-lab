@@ -64,16 +64,17 @@ exitron_pipe.py generates three files:
 
 ## 🌱 ALS analysis
 ### Modeling Exitron Usage in ALS vs Healthy Individuals
-<details>
-  <summary> Top Results</summary>
-        Coef.  Std.Err.         z         P>|z|     [0.025    0.975]          tissue                     exitron     p_fdr
-    -2.660590  0.519358 -5.122847  3.009560e-07  -3.678512 -1.642668  Cortex_Frontal   chr19:35787559:35787643:+  0.000130
-    -1.527758  0.299147 -5.107042  3.272404e-07  -2.114077 -0.941440  Cortex_Frontal   chr20:63678183:63678267:+  0.000130
-    -7.592406  1.486782 -5.106603  3.280017e-07 -10.506445 -4.678367  Cortex_Frontal    chr7:83155079:83155169:-  0.000130
-    -4.972107  1.012073 -4.912797  8.978622e-07  -6.955733 -2.988481  Cortex_Frontal  chr1:240207870:240208101:+  0.000267
-    -4.962993  1.087790 -4.562456  5.055875e-06  -7.095022 -2.830964  Cortex_Frontal  chr1:240207639:240208134:+  0.000893
-<details>
 
-#### Key observations
+#### Key observations:
 * Strong tissue specificity for frontal cortex
-* Negative coefficients indicate these exitrons are **less used** in individuals with ALS 
+* Negative coefficients indicate these exitrons are **less used** in individuals with ALS
+
+#### Top results:
+```
+  Coef.  Std.Err.         z         P>|z|     [0.025    0.975]          tissue                     exitron     p_fdr
+-2.660590  0.519358 -5.122847  3.009560e-07  -3.678512 -1.642668  Cortex_Frontal   chr19:35787559:35787643:+  0.000130
+-1.527758  0.299147 -5.107042  3.272404e-07  -2.114077 -0.941440  Cortex_Frontal   chr20:63678183:63678267:+  0.000130
+-7.592406  1.486782 -5.106603  3.280017e-07 -10.506445 -4.678367  Cortex_Frontal    chr7:83155079:83155169:-  0.000130
+-4.972107  1.012073 -4.912797  8.978622e-07  -6.955733 -2.988481  Cortex_Frontal  chr1:240207870:240208101:+  0.000267
+-4.962993  1.087790 -4.562456  5.055875e-06  -7.095022 -2.830964  Cortex_Frontal  chr1:240207639:240208134:+  0.000893
+```
