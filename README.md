@@ -80,4 +80,5 @@ ALSvsHealthy_model.ipynb
 ### Modeling Effect of Exitrons on ALS Severity 
 ALS_severity_model.ipynb
 
-
+#### Key observations:
+* Did not find significant exitrons in their correlation with c9orf72 status
