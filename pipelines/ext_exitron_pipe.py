@@ -1,15 +1,7 @@
 import pandas as pd
 import glob
 import os
-from tqdm import tqdm # progress tracker
 import pyranges as pr # parsing gff
-import numpy as np
-import pysam
-import itertools
-import pyranges as pr # parsing gff
-from collections import defaultdict
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 def parseJunctionFile(file_path):
     # column names for RegTools junction files
