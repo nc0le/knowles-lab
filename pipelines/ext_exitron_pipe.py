@@ -2,6 +2,9 @@ import pandas as pd
 import glob
 import os
 import pyranges as pr # parsing gff
+from tqdm import tqdm # progress tracker
+import pysam
+import numpy as np
 
 def parseJunctionFile(file_path):
     # column names for RegTools junction files
@@ -14,7 +17,7 @@ def parseJunctionFile(file_path):
     # extract sample ID from the filename
     sample_id = os.path.basename(file_path).split('.')[0]
     
-    # read the file into a pandas DataFrame
+    # read file
     df = pd.read_csv(
         file_path, sep='\t', header=None, names=regtools_column_names,
         dtype={'chrom': str, 'block_sizes_orig': str, 'block_starts_orig': str}
@@ -22,15 +25,13 @@ def parseJunctionFile(file_path):
         
     df['sample_id_source'] = sample_id
 
-    # convert relevant columns to numeric types, coercing errors
+    # clean 
     for col in ['start_anchor', 'end_anchor', 'score']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
     
-    # drop rows if info is missing
     df.dropna(subset=['start_anchor', 'end_anchor', 'score', 'block_sizes_orig'], inplace=True)
     
-    # ensure int types
     for col in ['start_anchor', 'end_anchor', 'score']:
         df[col] = df[col].astype(int)
 
@@ -40,7 +41,6 @@ def transformJunctionData(raw_df):
     
     # CHROMOSOME FILTERING
     original_row_count = len(raw_df)
-    
     # allowed chromosomes
     allowed_chrom_numbers = [str(i) for i in range(1, 23)]
     allowed_sex_chroms_upper = ['X', 'Y'] 
@@ -103,7 +103,6 @@ def transformJunctionData(raw_df):
     return transformed_df
 
 print("reading gff")
-# load gff3 and extract features
 gff = pr.read_gff3("/gpfs/commons/home/ncui/project/reference_data/gencode.v48.annotation.gff3.gz")
 
 features = {
@@ -140,58 +139,53 @@ def findExitrons(transformed_df, feature, feature_name):
         'sourceID': transformed_df['sample_id_source']
     })
 
-    # Convert the prepared DataFrame to a PyRanges object
     junction_pr = pr.PyRanges(junction_df_for_pr)
 
     # FIND CONTAINED EXITRONS
     contained_junctions = junction_pr.overlap(feature, how="containment", strandedness="same")
     contained_df = contained_junctions.df
-    if not contained_df.empty:
-        contained_df['exitron_type'] = 'contained'
+    contained_df['exitron_type'] = 'contained'
     print(f"Found {len(contained_df)} 'contained' exitrons in {feature_name} regions.")
 
     # FIND SPANNING EXITRONS
-    bridging_df = pd.DataFrame()  # Initialize empty dataframe
+    spanning_df = pd.DataFrame()
+    joined_pr = junction_pr.join(feature)
 
-    required_cols = ['transcript_id', 'exon_number']
-    if not all(col in feature.columns for col in required_cols):
-        print(f"Warning: Required columns {required_cols} not in {feature_name} features. Skipping bridging exitron search.")
-    else:
-        # Join junctions with features to find all overlaps
-        joined_pr = junction_pr.join(feature)
+    if not joined_pr.empty:
+        joined_df = joined_pr.df
+        joined_df['exon_number'] = pd.to_numeric(joined_df['exon_number'])
 
-        if not joined_pr.empty:
-            joined_df = joined_pr.df
-            joined_df['exon_number'] = pd.to_numeric(joined_df['exon_number'])
+        # group by junction title and transcript_id
+        grouped = joined_df.groupby(['title', 'transcript_id'])
 
-            # Group by junction ('title') and transcript_id
-            grouped = joined_df.groupby(['title', 'transcript_id'])
+        # define filter to find junctions spanning two adjacent exons
+        def is_adjacent(g):
 
-            # Define a filter to find junctions spanning two adjacent exons
-            def is_adjacent_bridge(g):
-                if len(g) != 2:
-                    return False
-                exon_numbers = g['exon_number'].unique()
-                return len(exon_numbers) == 2 and abs(exon_numbers[0] - exon_numbers[1]) == 1
+            # junction overlaps with 2 exons
+            if len(g) != 2:
+                return False
+            
+            # consecutive exons
+            exon_numbers = g['exon_number'].unique()
+            return len(exon_numbers) == 2 and abs(exon_numbers[0] - exon_numbers[1]) == 1
 
-            adjacent_groups = grouped.filter(is_adjacent_bridge)
+        adjacent_groups = grouped.filter(is_adjacent)
 
-            if not adjacent_groups.empty:
-                # Get the unique titles of the bridging junctions
-                bridging_junction_titles = adjacent_groups['title'].unique()
+        if not adjacent_groups.empty:
+            spanning_junctions = adjacent_groups['title'].unique()
 
-                # Filter original junctions to get the bridging exitrons
-                bridging_junctions_pr = junction_pr[junction_pr.title.isin(bridging_junction_titles)]
-                bridging_df = bridging_junctions_pr.df
-                bridging_df['exitron_type'] = 'bridging'
+            # filter original junctions to get spanning exitrons
+            spanning_junctions_pr = junction_pr[junction_pr.title.isin(spanning_junctions)]
+            spanning_df = spanning_junctions_pr.df
+            spanning_df['exitron_type'] = 'spanning'
 
-    print(f"Found {len(bridging_df)} 'bridging' exitrons in {feature_name} regions.")
+    print(f"Found {len(spanning_df)} spanning exitrons in {feature_name} regions.")
 
-    # combine and return results
-    combined_df = pd.concat([contained_df, bridging_df], ignore_index=True)
+    # combine results
+    combined_df = pd.concat([contained_df, spanning_df], ignore_index=True)
 
     if combined_df.empty:
-        return pr.PyRanges()  # Return an empty PyRanges object if no exitrons were found
+        return pr.PyRanges()
 
     return pr.PyRanges(combined_df)
 
@@ -200,34 +194,31 @@ def compileExitronData(directory_path, output_filepath, file_pattern):
     all_exitron_info = []
     file_paths = glob.glob(os.path.join(directory_path, file_pattern))
     print(f"Found {len(file_paths)} files to process.")
-    print("starting parse...")
 
-    for file_path in file_paths:
-        print(f"\n--- Processing file: {os.path.basename(file_path)} ---")
+    for file_path in tqdm(file_paths):
+        print(f"\nProcessing file: {os.path.basename(file_path)}")
         try:
-            # 1. Parse and transform data
+            # 1. parse and transform data
             parsed_data = parseJunctionFile(file_path)
             transformed_df = transformJunctionData(parsed_data)
 
-            # 2. Find exitrons for each feature type
+            # 2. find exitrons for each feature type
             print("Finding exitrons...")
+
             for feature_name, feature_pr in features.items():
+
                 print(f"-> Analyzing '{feature_name}' regions...")
-                # Pass the feature_name to the function
                 exitron_pr = findExitrons(transformed_df, feature_pr, feature_name)
 
-                # Only append if exitrons were found
                 if not exitron_pr.empty:
                     exitron_pr.FeatureType = feature_name
                     all_exitron_info.append(exitron_pr)
 
         except Exception as e:
-            print(f"An error occurred while processing file {os.path.basename(file_path)}: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Error processing file {os.path.basename(file_path)}: {e}")
             continue
 
-    # 3. Concatenate and save results
+    # 3. concatenate and save results
     if not all_exitron_info:
         print("\nNo exitrons found across all files. No output file will be generated.")
         return None
@@ -238,14 +229,70 @@ def compileExitronData(directory_path, output_filepath, file_pattern):
     print(f"Successfully saved data to {output_filepath}")
     return final_gr
 
-cDNA_unfil_exitrons = compileExitronData(
-    "/gpfs/commons/home/ncui/project/falsitron_pipeline/",
-    "/gpfs/commons/home/ncui/project/cDNA_unfil_exitrons.parquet",
-    file_pattern="*cDNA.fixed.stranded.junc"
-)
 
-dRNA_unfil_exitrons = compileExitronData(
-    "/gpfs/commons/home/ncui/project/falsitron_pipeline/",
-    "/gpfs/commons/home/ncui/project/dRNA_unfil_exitrons.parquet",
-    file_pattern="*dRNA.fixed.stranded.junc"
-)
+def filterExitronData(exitron_data_filepath, output_filepath, min_count=30, min_peeps=10):
+    long_df= pd.read_parquet(exitron_data_filepath)
+    # drop duplicates created by pyranges .overlap method
+    long_df.drop_duplicates(subset=['title', 'sourceID'], inplace=True)
+
+    # create filtered wide df
+    wide_df = long_df.pivot(index='title', columns='sourceID', values='reads').fillna(0)
+
+    wide_is_gt_count = wide_df > min_count
+    wide_is_gt_count_sums = wide_is_gt_count.sum(axis=1)
+    keep_juncs = wide_is_gt_count_sums[wide_is_gt_count_sums >= min_peeps].index
+    print(f"Found {len(keep_juncs)} junctions that passed the filter.")
+
+    # construct final matrix
+    filtered_exitron_data = wide_df.loc[keep_juncs].copy()
+    filtered_exitron_data = filtered_exitron_data.where(filtered_exitron_data >= min_count, 0)
+
+    print(f"Saving filtered data to: {output_filepath}")
+    filtered_exitron_data.to_parquet(output_filepath)
+
+    return filtered_exitron_data
+
+def normalizeExitronData(filtered_exitron_data, output_filepath):
+    annots = pd.DataFrame({"exitron": list(filtered_exitron_data.index)})
+    annots = pd.concat([annots, annots['exitron'].str.split(':', expand=True)], axis=1)
+    annots.columns = ["exitron", "chr", "start", "end", "strand"]
+    annots['start'] = annots['start'].astype(int)
+    annots['end'] = annots['end'].astype(int)
+
+    EXTEND = 6
+    normalized_df = np.zeros(filtered_exitron_data.shape)
+    ##tqdm(range(len(filtered_exitron_data.columns))):
+    for i in range(len(filtered_exitron_data.columns)):
+        print("Doing",i)
+        source_id = filtered_exitron_data.columns[i]
+        bam_filepath = f'/gpfs/commons/projects/ALS_Consortium_resource/bam_files/{source_id}.bam'
+
+        with pysam.AlignmentFile(bam_filepath, 'rb') as bam:
+            for j in range(len(filtered_exitron_data.index)):
+                numerator = filtered_exitron_data.iat[j, i]
+
+                if numerator > 0:
+                    junc_chr = annots['chr'][j]
+                    junc_start = annots['start'][j]
+                    junc_end = annots['end'][j]
+
+                    # calculate denominator
+                    depth = bam.count_coverage(junc_chr, junc_start - EXTEND, junc_end + EXTEND, quality_threshold=0)
+                    totals = [sum(values) for values in zip(*depth)]
+                    
+                    denom = np.median(totals[:EXTEND] + totals[-EXTEND:])
+                    if denom > 0:
+                        normalized_df[j, i] = numerator / denom
+    np.save(output_filepath, normalized_df)
+    return normalized_df
+
+# change first argument to directory containing junction data 
+# change second argument to parquet file for exitron data output 
+# change third argument to correct junction file identifier
+compileExitronData("/gpfs/commons/groups/knowles_lab/atokolyi/als/juncs_min10bp/", "/gpfs/commons/home/ncui/project/unfil_exitrons.parquet", file_pattern="*.junc")
+
+# change argument to name of exitron data parquet file 
+filtered_exitron_data = filterExitronData('/gpfs/commons/home/ncui/project/unfil_exitrons.parquet',"/gpfs/commons/home/ncui/project/fil_exitrons.parquet")
+
+# change argument to name of normalized exitron expression data parquet file 
+normalizeExitronData(filtered_exitron_data, 'norm_exitrons.npy')
