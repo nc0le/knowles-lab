@@ -5,9 +5,6 @@ from tqdm import tqdm # progress tracker
 import pyranges as pr # parsing gff
 import numpy as np
 import pysam
-import itertools
-import pyranges as pr # parsing gff
-from collections import defaultdict
 
 def parseJunctionFile(file_path):
     # column names for RegTools junction files
@@ -233,7 +230,7 @@ def normalizeExitronData(filtered_exitron_data, output_filepath):
 # change third argument to correct junction file identifier
 compileExitronData("/gpfs/commons/groups/knowles_lab/atokolyi/als/juncs_min6bp/", "/gpfs/commons/home/ncui/project/exitron_data.parquet", file_pattern="*.bam.junc")
 
-# change argument to name of filtered exitron data parquet file 
+# change argument to name of exitron data parquet file 
 filtered_exitron_data = filterExitronData('final_exitron_data.parquet')
 
 # change argument to name of normalized exitron expression data parquet file 
