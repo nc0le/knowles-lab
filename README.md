@@ -15,7 +15,7 @@ python ext_exitron_pipe.py
 python falsitron_finder.py
 ```
 ### Pipeline overview:
-1. Force stradedness in regtools data to accomodate nanopore data ('?' -> '-').
+1. Force strandedness in regtools data to accomodate nanopore data ('?' -> '-').
 2. Parse raw junction data from regtools files.
 3. Transform data by recalculating junction coordinates. Outputs data in bed12 format.
 4. Extract following features from gencode v48: CDS, exon, five_prime_UTR, three_prime_UTR.
